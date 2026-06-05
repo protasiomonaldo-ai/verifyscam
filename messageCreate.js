@@ -1,5 +1,5 @@
-const { Events, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
-const store = require('../store');
+const { Events, EmbedBuilder } = require('discord.js');
+const store = require('./store');
 
 module.exports = {
   name: Events.MessageCreate,
@@ -40,7 +40,7 @@ module.exports = {
         .setDescription(
           `${member} ha completato la verifica con successo!\n\n` +
           `${role ? `🎭 Ruolo assegnato: **${role.name}**` : '⚠️ Ruolo non trovato.'}\n\n` +
-          `Il canale è ora privato. Un amministratore può chiuderlo.`
+          `Il canale è ora privato. Un admin può eliminarlo.`
         )
         .setTimestamp()
         .setFooter({ text: 'Sistema di Verifica' });
@@ -49,14 +49,15 @@ module.exports = {
 
     } catch (err) {
       console.error('Errore durante la verifica:', err);
-
-      const errorEmbed = new EmbedBuilder()
-        .setColor(0xED4245)
-        .setTitle('❌ Errore')
-        .setDescription('Si è verificato un errore durante la verifica. Contatta un amministratore.')
-        .setTimestamp();
-
-      await message.channel.send({ embeds: [errorEmbed] });
+      await message.channel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xED4245)
+            .setTitle('❌ Errore')
+            .setDescription('Errore durante la verifica. Contatta un admin.')
+            .setTimestamp()
+        ]
+      });
     }
   },
 };

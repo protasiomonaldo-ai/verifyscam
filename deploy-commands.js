@@ -17,7 +17,7 @@ const commands = [
     )
     .addStringOption(opt =>
       opt.setName('message2')
-        .setDescription('Frase/parola che il bot deve rilevare nel ticket per completare la verifica')
+        .setDescription('Frase che il bot deve rilevare nel ticket per completare la verifica')
         .setRequired(true)
     )
     .toJSON(),

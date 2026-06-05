@@ -1,7 +1,9 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+
+const ready = require('./ready');
+const interactionCreate = require('./interactionCreate');
+const messageCreate = require('./messageCreate');
 
 const client = new Client({
   intents: [
@@ -14,16 +16,8 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'));
-
-for (const file of eventFiles) {
-  const event = require(path.join(eventsPath, file));
-  if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args, client));
-  } else {
-    client.on(event.name, (...args) => event.execute(...args, client));
-  }
-}
+client.once(ready.name, (...args) => ready.execute(...args, client));
+client.on(interactionCreate.name, (...args) => interactionCreate.execute(...args, client));
+client.on(messageCreate.name, (...args) => messageCreate.execute(...args, client));
 
 client.login(process.env.DISCORD_TOKEN);

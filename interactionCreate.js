@@ -7,7 +7,7 @@ const {
   PermissionFlagsBits,
   ChannelType,
 } = require('discord.js');
-const store = require('../store');
+const store = require('./store');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -69,8 +69,10 @@ async function handleButton(interaction, client) {
     });
   }
 
+  const safeUsername = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '');
+
   const existingTicket = interaction.guild.channels.cache.find(
-    ch => ch.name === `verify-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}` && ch.type === ChannelType.GuildText
+    ch => ch.name === `verify-${safeUsername}` && ch.type === ChannelType.GuildText
   );
 
   if (existingTicket) {
@@ -123,19 +125,16 @@ async function handleButton(interaction, client) {
       });
     });
 
-    if (client.user) {
-      permissionOverwrites.push({
-        id: client.user.id,
-        allow: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-          PermissionFlagsBits.ReadMessageHistory,
-          PermissionFlagsBits.ManageChannels,
-        ],
-      });
-    }
+    permissionOverwrites.push({
+      id: client.user.id,
+      allow: [
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.ReadMessageHistory,
+        PermissionFlagsBits.ManageChannels,
+      ],
+    });
 
-    const safeUsername = interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '');
     const channel = await guild.channels.create({
       name: `verify-${safeUsername}`,
       type: ChannelType.GuildText,
@@ -153,27 +152,21 @@ async function handleButton(interaction, client) {
       .setColor(0x57F287)
       .setTitle('🎫 Ticket di Verifica Aperto')
       .setDescription(
-        `Benvenuto ${member}, il tuo ticket di verifica è stato aperto.\n\n` +
+        `Benvenuto ${member}, il tuo ticket è stato aperto.\n\n` +
         `Per completare la verifica, invia il messaggio richiesto in questo canale.\n\n` +
-        `> **Nota:** Questo ticket non può essere chiuso da te. Solo gli amministratori possono chiuderlo.`
+        `> ⚠️ Non puoi chiudere questo ticket. Solo gli admin possono farlo.`
       )
-      .addFields({
-        name: '👤 Utente',
-        value: `${member} (\`${interaction.user.tag}\`)`,
-        inline: true,
-      })
+      .addFields({ name: '👤 Utente', value: `${member} (\`${interaction.user.tag}\`)`, inline: true })
       .setTimestamp()
       .setFooter({ text: 'Sistema di Verifica' });
 
     await channel.send({ content: `${member}`, embeds: [ticketEmbed] });
+    await interaction.editReply({ content: `✅ Ticket aperto: ${channel}` });
 
-    await interaction.editReply({
-      content: `✅ Il tuo ticket è stato aperto: ${channel}`,
-    });
   } catch (err) {
     console.error('Errore creazione ticket:', err);
     await interaction.editReply({
-      content: '❌ Errore durante la creazione del ticket. Controlla i permessi del bot.',
+      content: '❌ Errore nella creazione del ticket. Controlla i permessi del bot.',
     });
   }
 }
